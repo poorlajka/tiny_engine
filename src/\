@@ -1,0 +1,61 @@
+use crate::vector3::{Vector3, cross, dot, normalize};
+use crate::shape::CollisionShape;
+
+pub fn gjk<T: CollisionShape>(shape_a: &T, shape_b: &T) -> bool {
+    let mut simplex: Vec<Vector3> = Vec::new();
+    simplex.push(pick_starting_point(shape_a, shape_b));
+    let mut direction = pick_starting_direction(&simplex);
+
+    while true {
+        let new_point = support(shape_a, shape_b, direction);
+        if dot(new_point, direction) < 0.0 {
+            return false;
+        }
+
+        simplex.push(new_point);
+        if handle_simplex(&simplex, &direction) {
+            return true;
+        }
+    }
+    true
+}
+
+fn pick_starting_point<T: CollisionShape>(shape_a: &T, shape_b: &T) -> Vector3 {
+    let direction = normalize(shape_a.center() - shape_b.center());
+    support(shape_a, shape_b, direction)
+}
+
+fn pick_starting_direction(simplex: &Vec<Vector3>) -> Vector3 {
+    normalize(-simplex[0])
+}
+
+fn support<T: CollisionShape>(shape_a: &T, shape_b: &T, direction: Vector3) -> Vector3 {
+    shape_a.furthest_point(direction) - shape_b.furthest_point(-direction)
+}
+
+fn handle_line(simplex: &Vec<Vector3>, direction: &mut Vector3) -> bool {
+    match simplex.len() {
+        2 => handle_line(simplex, direction),
+        3 => handle_traingle(simplex, direction),
+        _ => handle_tetrahedron(simplex, direction)
+    }
+}
+
+fn handle_line(simplex: &Vec<Vector3>, direction: &mut Vector3) -> bool {
+    let a = simplex[1];
+    let b = simplex[2];
+    direction = normalize(perp(a, b));
+    false
+}
+
+fn handle_triangle(simplex: &Vec<Vector3>, direction: Vector3) -> bool {
+    let a = simplex[1];
+    let b = simplex[2];
+    let c = simplex[3];
+
+    ab_perp = 
+
+}
+fn handle_tetrahedron(simplex: &Vec<Vector3>, direction: Vector3) -> bool {
+}
+
