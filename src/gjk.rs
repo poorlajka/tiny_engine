@@ -4,24 +4,24 @@ use crate::shape::Shape;
 
 pub fn gjk(simplex: &mut Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> bool { 
     simplex.push(starting_point(shape_a, shape_b));
-    let mut direction = normalize(-simplex[0]);
+    let mut direction = -simplex[0].normalize();
     let mut intersecting = false;
 
     while !intersecting {
         let new_point = shape::support(shape_a, shape_b, direction);
 
-        if dot(new_point, direction) < 0.0 {
+        if new_point.dot(direction) < 0.0 {
             break
         }
         simplex.push(new_point);
-        (intersecting, direction) = handle_simplex(&mut simplex, direction);
+        (intersecting, direction) = handle_simplex(simplex, direction);
     }
 
     intersecting
 }
 
 fn starting_point(shape_a: &Shape, shape_b: &Shape) -> Vec3 {
-    let direction = normalize(shape_a.pos() - shape_b.pos());
+    let direction = (shape_a.pos() - shape_b.pos()).normalize();
     shape::support(shape_a, shape_b, direction)
 }
 
@@ -38,7 +38,7 @@ fn handle_line(simplex: &mut Vec<Vec3>) -> (bool, Vec3) {
     let a = simplex[1];
     let b = simplex[0];
 
-    (false, normalize(perp(a, b)))
+    (false, a.perp(b).normalize())
 }
 
 fn handle_triangle(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3){
@@ -50,13 +50,13 @@ fn handle_triangle(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3){
     let ac_perp = perp(a, c);
     let ao = Vec3::ORIGIN - a; 
 
-    if dot(ab_perp, ao) > 0.0 {
+    if ab_perp.dot(ao) > 0.0 {
         simplex.remove(0);
-        return (false, normalize(ab_perp));
+        return (false, ab_perp.normalize());
     }
-    if dot(ac_perp, ao) > 0.0 {
+    if ac_perp.dot(ao) > 0.0 {
         simplex.remove(1);
-        return (false, normalize(ac_perp));
+        return (false, ac_perp.normalize());
     }
 
     (false, direction)
@@ -73,19 +73,19 @@ fn handle_tetrahedron(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3) 
     let ad = d - a;
     let ao = Vec3::ORIGIN - a; 
 
-    let abc = cross(ab, ac);
-    let acd = cross(ac, ad);
-    let adb = cross(ad, ab);
+    let abc = ab.cross(ac);
+    let acd = ac.cross(ad);
+    let adb = ad.cross(ab);
 
-    if dot(abc, ao) > 0.0 {
+    if abc.dot(ao) > 0.0 {
         simplex.remove(0);
         return handle_triangle(simplex, direction);
     }
-    if dot(acd, ao) > 0.0 {
+    if acd.dot(ao) > 0.0 {
         simplex.remove(2);
         return handle_triangle(simplex, direction);
     }
-    if dot(adb, ao) > 0.0 {
+    if adb.(ao) > 0.0 {
         simplex.remove(1);
         return handle_triangle(simplex, direction);
     }

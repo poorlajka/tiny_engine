@@ -3,7 +3,7 @@ use crate::shape::Shape;
 use crate::shape;
 use crate::collision;
 
-//TODO Clean this shit up this is kinda fucked 
+//TODO This fn makes my eyes cry rewrite later
 pub fn epa(simplex: &Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> collision::CData {
 
     let mut polytope = simplex.clone();
@@ -23,7 +23,7 @@ pub fn epa(simplex: &Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> collision::
 
         let support = shape::support(shape_a, shape_b, min_normal);
 
-        let support_distance = dot(support, min_normal);
+        let support_distance = support.dot(min_normal);
 
         if f32::abs(support_distance - min_distance) > 0.001 {
             min_distance = f32::MAX;
@@ -32,7 +32,7 @@ pub fn epa(simplex: &Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> collision::
             let mut unique_edges: Vec<(usize, usize)> = Vec::new();
             let mut i: usize = 0;
             while i < normals.len() {
-                if cross(normals[i].0, support) == Vec3::NULL_VEC {
+                if normals[i].0.cross(support) == Vec3::NULL_VEC {
                     add_if_unique_edge(&mut unique_edges, &faces, i, 0, 1);
                     add_if_unique_edge(&mut unique_edges, &faces, i, 1, 2);
                     add_if_unique_edge(&mut unique_edges, &faces, i, 2, 0);
@@ -88,8 +88,8 @@ fn get_face_normals(polytope: &Vec<Vec3>, faces: &Vec<Vec<usize>>) -> (Vec<(Vec3
         let ab = b - a;
         let ac = c - a;
 
-        let mut normal = normalize(cross(ab, ac));
-        let mut distance = dot(normal, a);
+        let mut normal = ab.cross(ac).normalize();
+        let mut distance = normal.dot(a);
 
         if distance < 0.0 {
             normal *= -1.0;

@@ -1,4 +1,5 @@
 use std::ops::{Add, AddAssign, Sub, Neg, SubAssign, Mul, MulAssign, Div, DivAssign};
+use crate::transform::Transform;
 use std::fmt;
 use crate::shape::Shape;
 
@@ -47,6 +48,14 @@ impl Mul<f32> for Vec3 {
             x: self.x * scalar, 
             y: self.y * scalar, 
             z: self.z * scalar 
+        }
+    }
+
+    fn mul(self, matrix: &[[f32; 3]; 3]) -> Self {
+        Self {
+            x: matrix[0][0]*self.x + matrix[0][1]*self.y + matrix[0][2]self.z, 
+            y: matrix[1][0]*self.x + matrix[1][1]*self.y + matrix[1][2]self.z, 
+            z: matrix[2][0]*self.x + matrix[2][1]*self.y + matrix[2][2]self.z, 
         }
     }
 }
@@ -108,6 +117,29 @@ impl Vec3 {
         }
     }
 
+	pub fn dot(self, rv: Vec3) -> f32 {
+		self.x * v.x 
+		+ self.y * v.y 
+		+ self.z * v.z
+	}
+
+	pub fn cross(self, rv: Vec3) -> Vec3 {
+		Vec3 {
+			x: self.y * rv.z - self.z * rv.y,
+			y: self.z * rv.x - self.x * rv.z,
+			z: self.x * rv.y - self.y * rv.x 
+		}
+	}
+
+	pub fn perp(self, rv: Vec3) -> Vec3 {
+		tripple_cross(rv - self, -self, rv - self)
+	}
+
+	pub fn normalize(self) -> Vec3 {
+		self * quake_rsqrt(self.dot(self))
+	}
+
+
     pub fn sin(self) -> Vec3 {
         Vec3 {
             x: self.x.sin(),
@@ -124,37 +156,10 @@ impl Vec3 {
             z: self.z.cos()
         }
     }
-}
 
-pub fn dot(a: Vec3, b: Vec3) -> f32 {
-    a.x * b.x 
-    + a.y * b.y 
-    + a.z * b.z
-}
-
-pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
-    Vec3 {
-        x: a.y * b.z - a.z * b.y,
-        y: a.z * b.x - a.x * b.z,
-        z: a.x * b.y - a.y * b.x 
-    }
-}
-
-pub fn tripple_cross(a: Vec3, b: Vec3, c: Vec3) -> Vec3 {
-    cross(cross(a, b), c)
-}
-
-pub fn perp(a: Vec3, b: Vec3) -> Vec3 {
-    tripple_cross(b - a, -a, b - a)
-}
-
-pub fn normalize(a: Vec3) -> Vec3 {
-    a * quake_rsqrt(dot(a, a))
-}
-
-
-pub fn transform(v: Vec3, transform: Transform) -> Vec3 {
-    Transform::translate(Transform::rotate(v, transform.sin, transform.cos), transform.pos)
+	pub fn tripple_cross(a: Vec3, b: Vec3, c: Vec3) -> Vec3 {
+		a.cross(b).cross(c)
+	}
 }
 
 fn quake_rsqrt(number: f32) -> f32 {
