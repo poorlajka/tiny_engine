@@ -1,7 +1,5 @@
 use std::ops::{Add, AddAssign, Sub, Neg, SubAssign, Mul, MulAssign, Div, DivAssign};
-use crate::transform::Transform;
 use std::fmt;
-use crate::shape::Shape;
 
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct Vec3 {
@@ -50,12 +48,16 @@ impl Mul<f32> for Vec3 {
             z: self.z * scalar 
         }
     }
+}
 
-    fn mul(self, matrix: &[[f32; 3]; 3]) -> Self {
+impl Mul<[[f32; 3]; 3]> for Vec3 {
+    type Output = Self;
+
+    fn mul(self, matrix: [[f32; 3]; 3]) -> Self {
         Self {
-            x: matrix[0][0]*self.x + matrix[0][1]*self.y + matrix[0][2]self.z, 
-            y: matrix[1][0]*self.x + matrix[1][1]*self.y + matrix[1][2]self.z, 
-            z: matrix[2][0]*self.x + matrix[2][1]*self.y + matrix[2][2]self.z, 
+            x: matrix[0][0]*self.x + matrix[0][1]*self.y + matrix[0][2]*self.z, 
+            y: matrix[1][0]*self.x + matrix[1][1]*self.y + matrix[1][2]*self.z, 
+            z: matrix[2][0]*self.x + matrix[2][1]*self.y + matrix[2][2]*self.z, 
         }
     }
 }
@@ -118,9 +120,9 @@ impl Vec3 {
     }
 
 	pub fn dot(self, rv: Vec3) -> f32 {
-		self.x * v.x 
-		+ self.y * v.y 
-		+ self.z * v.z
+		self.x * rv.x 
+		+ self.y * rv.y 
+		+ self.z * rv.z
 	}
 
 	pub fn cross(self, rv: Vec3) -> Vec3 {
@@ -132,12 +134,17 @@ impl Vec3 {
 	}
 
 	pub fn perp(self, rv: Vec3) -> Vec3 {
-		tripple_cross(rv - self, -self, rv - self)
+		Self::tripple_cross(rv - self, -self, rv - self)
 	}
 
 	pub fn normalize(self) -> Vec3 {
 		self * quake_rsqrt(self.dot(self))
+        //self / self.len()
 	}
+
+    pub fn len(self) -> f32 {
+            (self.x.powf(2.0) + self.y.powf(2.0) + self.z.powf(2.0)).sqrt()
+    }
 
 
     pub fn sin(self) -> Vec3 {
@@ -155,6 +162,10 @@ impl Vec3 {
             y: self.y.cos(),
             z: self.z.cos()
         }
+    }
+
+    pub fn same_direction(self, rv: Vec3) -> bool {
+        self.dot(rv) > 0.0
     }
 
 	pub fn tripple_cross(a: Vec3, b: Vec3, c: Vec3) -> Vec3 {

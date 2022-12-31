@@ -1,4 +1,9 @@
 
+use crate::shape::Shape;
+use crate::vec3::{Vec3, dot};
+use crate::transform::Transform;
+
+
 pub struct CylinderStruct {
     pos: Vec3,
     height: f32,
@@ -23,11 +28,11 @@ impl CylinderStruct {
     }
 
 	pub fn inv_inertia(&self, inv_m: f32) -> [[f32; 3]; 3] {
-		r2 = self.radius.pow(2)
+		r2 = self.radius.pow(2);
 		h2 = self.height.pow(2);
 		
-		[[12.0*inv_m/(3.0*r2+h2), 0.0, 0.0]
-		 [0.0, 12.0*inv_m/(3.0*r2+h2), 0.0]
+		[[12.0*inv_m/(3.0*r2+h2), 0.0, 0.0],
+		 [0.0, 12.0*inv_m/(3.0*r2+h2), 0.0],
 		 [0.0, 0.0, 2.0*inv_m/r2]]
 	}
 

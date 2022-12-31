@@ -1,3 +1,6 @@
+use crate::vec3::{Vec3, dot};
+use crate::transform::Transform;
+use crate::shape::Shape;
 
 pub struct ConeStruct {
     pos: Vec3,
@@ -24,11 +27,11 @@ impl ConeStruct {
     }
 
 	pub fn inv_inertia(&self, inv_m: f32) -> [[f32; 3]; 3] {
-		r2 = self.radius.pow(2)
+		r2 = self.radius.pow(2);
 		h2 = self.height.pow(2);
 		
-		[[5.0*inv_m/(5.0*h2) + 20.0*inv_m/(3.0*r2), 0.0, 0.0]
-		 [0.0, 5.0*inv_m/(5.0*h2) + 20.0*inv_m/(3.0*r2), 0.0]
+		[[5.0*inv_m/(5.0*h2) + 20.0*inv_m/(3.0*r2), 0.0, 0.0],
+		 [0.0, 5.0*inv_m/(5.0*h2) + 20.0*inv_m/(3.0*r2), 0.0],
 		 [0.0, 0.0, 10.0*inv_m/(3.0*r2)]]
 	}
 

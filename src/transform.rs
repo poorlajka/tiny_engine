@@ -1,54 +1,41 @@
-use crate::Vec3;
+use crate::vec3::Vec3;
+use glam::Quat;
 
+#[derive(Debug, Copy, Clone)]
 pub struct Transform {
     pub displacement: Vec3,
-    pub sin: Vec3,
-    pub cos: Vec3,
+    pub rotation: Quat,
 }
 
 
 impl Transform {
-    pub const ZERO: Transform = Transform { displacement: Vec3::NULL_VEC, sin: Vec3::NULL_VEC, cos: Vec3::NULL_VEC };
+    pub const ZERO: Transform = Transform { displacement: Vec3::NULL_VEC, rotation: Quat::from_xyzw(0.0, 0.0, 0.0, 0.0) };
 
-    pub fn new(displacement: Vec3, angle: Vec3) -> Transform {
+    pub fn new(displacement: Vec3, rotation: Quat) -> Transform {
         Transform {
             displacement: displacement,
-            sin: angle.sin(),
-            cos: angle.cos()
+            rotation: rotation,
         }
     }
 
-	pub fn apply(v: Vec3, transform: Transform) -> Vec3 {
-		let (displacement, sin, cos) = transform;
-
-		translate(rotate(v, sin, cos), displacement)
+	pub fn apply(v: Vec3, transform: &Transform, origin: Vec3) -> Vec3 {
+		let Transform { displacement, rotation } = *transform;
+		let rotation = rotate(v - origin, rotation) + origin;
+        translate(rotation, displacement)
 	}
 
-    pub fn translate(v: Vec3, displacement: Vec3) -> Vec3 {
-        v + self.displacement
-    }
+}
+pub fn translate(v: Vec3, displacement: Vec3) -> Vec3 {
+    v + displacement
+}
 
-    pub fn rotate(v: Vec, sin: Vec3, cos: Vec3) -> Vec3 {
-        //X axis 
-        let mut v_new = Vec3 {
-            x: v.x,
-            y: v.y * cos.x - v.z * sin.x,
-            z: v.y * sin.x + v.z * cos.x,
-        };
+pub fn rotate(v: Vec3, rotation: Quat) -> Vec3 {
 
-        //Y axis 
-        v_new = Vec3 {
-            x: v_new.z * sin.y + v_new.x * cos.y,
-            y: v_new.y,
-            z: v_new.y * cos.y - v_new.x * sin.y
-        };
-
-        //Z axis 
-        Vec3 {
-            x: v_new.x * cos.z - v_new.y * sin.z, 
-            y: v_new.x * sin.z + v_new.y * cos.z,
-            z: v_new.z
-        }
+    let vec = rotation.mul_vec3(glam::Vec3{ x: v.x, y: v.y, z: v.z });
+    Vec3 {
+        x: vec.x,
+        y: vec.y,
+        z: vec.z,
     }
 }
 

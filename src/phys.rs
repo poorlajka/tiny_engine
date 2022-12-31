@@ -1,98 +1,39 @@
-use crate::vec3::{Vec3, cross, dot, normalize, perp};
-use crate::shape::Shape;
+use crate::vec3::Vec3;
+use crate::shape3::Shape;
 use crate::collision;
-use crate::shape::SphereStruct;
 use crate::transform::Transform;
 use crate::collision::CData;
+use crate::phys_obj::PhysObj;
+use bevy::prelude::Resource; 
+use glam::Quat;
 
-pub struct PhysObj {
-    shape: Shape,
-	transform: Transform,
 
-    inv_mass: f32,
-    force: Vec3,
-    vel: Vec3,
-
-    inv_inertia: Vec3,
-    torque: Vec3,
-    ang_vel: Vec3,
-
-    restitution: f32,
-    stationary: bool,
-	ghost: bool,
-    id: usize,
-
-}
-
-impl PhysObj {
-    pub fn new(shape: Shape, mass: f32) -> PhysObj {
-        PhysObj {
-            inv_mass: 1.0/mass,
-            force: Vec3::new(),
-            vel: Vec3::new(), 
-            ang_vel: Vec3::new(),
-            mo_intertia: Vec3::new(),
-            shape: shape,
-            restitution: 0.0,
-            stationary: false,
-        }
-    }
-
-    pub fn apply_lin_force(&mut self, force: Vec3) {
-        self.force += force;
-    }
-
-    pub fn apply_ang_force(&mut self, torque: Vec3) {
-        self.torque += force;
-    }
-
-    pub fn clear_forces(&mut self) {
-        self.force = Vec3::NULL_VEC;
-        self.torque = Vec3::NULL_VEC;
-    }
- 
-    pub fn shape(&self) -> &Shape {
-        &self.shape
-    }
-
-    pub fn update(&mut self, grav: Vec3, dt: f32) {
-        let acc = self.force * self.inv_mass + grav;
-        self.vel += acc * dt;
-        let distance = self.vel * dt;
-
-        let ang_acc = self.torque * self.inv_inertia;
-        self.ang_vel += ang_acc * dt;
-        let rotation = self.ang_vel * dt;
-
-        self.shape.transform(self.transform);
-        self.clear_forces();
-    }
-}
-
+#[derive(Resource)]
 pub struct PhysState {
     grav: Vec3,
     objects: Vec<PhysObj>
 }
 
 impl PhysState {
+
     pub fn new() -> PhysState {
         PhysState {
+            grav: Vec3 { x: 0.0, y: -0.0, z: 0.0 },
             objects: Vec::new()
         }
     }
 
     pub fn add_obj(&mut self, shape: Shape, mass: f32) -> usize {
-        self.objects.push(PhysObj::new(shape, mass));
-        self.objects.len() - 1
+        let id = self.objects.len();
+        self.objects.push(PhysObj::new(shape, mass, id));
+
+        id
     }
 
-    pub fn get_obj(&self, obj_id: usize) -> &PhysObj {
-        &self.objects[obj_id]
+    pub fn get_obj(&mut self, obj_id: usize) -> &mut PhysObj {
+        &mut self.objects[obj_id]
     }
 
-    pub fn apply_obj_force(&mut self, obj_id: usize, force: Vec3) {
-        self.objects[obj_id].apply_force(force);
-    }
     
     pub fn update(&mut self, dt: f32) {
         let mut collisions: Vec<CData> = Vec::new();
@@ -105,32 +46,48 @@ impl PhysState {
     }
 
 	fn resolve_collisions(&mut self, collisions: &Vec<CData>) {
-        for collision in &collisions {
-            let (id_a, id_b) = (collision.obj_a.id, collision.obj_b.id);
+        for collision in collisions {
+            let CData { id_a, id_b, normal, depth, .. } = *collision;
+
+            let transform = Transform::new(-normal * depth, Quat::from_rotation_z(0.0));
+
+            self.objects[id_a].shape.transform(&transform);
+
+            let transform = Transform::new(normal * depth, Quat::from_rotation_z(0.0)); 
+            self.objects[id_b].shape.transform(&transform);
 			
-			let (vel_a, vel_b, ang_vel_a, ang_vel_b) = impulse_response(collision);
-			
+			let (vel_a, vel_b, ang_vel_a, ang_vel_b) = self.impulse_response(&self.objects[id_a], &self.objects[id_b], normal, depth);
 			self.objects[id_a].vel += vel_a;
-			self.objects[id_a].ang_vel += ang_vel_a;
 			self.objects[id_b].vel -= vel_b;
-			self.objects[id_b].ang_vel -= ang_vel_b;
+			
+			self.objects[id_a].ang_vel += ang_vel_a/600.0;
+			self.objects[id_b].ang_vel -= ang_vel_b/600.0;
         }
 	}
+
+    //TODO put in new file and fix
+    fn impulse_response(&self, obj_a: &PhysObj, obj_b: &PhysObj, n: Vec3, depth: f32) -> (Vec3, Vec3, Vec3, Vec3) {
+
+        let (v1, v2, m1, m2, i1, i2) = (
+            obj_a.vel, 
+            obj_b.vel, 
+            obj_a.inv_mass, 
+            obj_b.inv_mass, 
+            obj_a.inv_inertia, 
+            obj_b.inv_inertia
+        );
+
+        let (r1, r2) = (n - obj_a.shape.pos(), n - obj_b.shape.pos());
+
+        let e = obj_a.restitution + obj_b.restitution;
+
+        let j = (v1*(-1.0+e)).dot(n) / 
+            (m1 + m2 + (r1.cross(n).cross(r1)*i1 + r2.cross(n).cross(r2)*i2).dot(n));
+
+        let w = 50.0;
+
+        (n*m1*j*w, n*m2*j*w, r1.cross(n*j)*i1*w, r2.cross(n*j)*i2*w)
+    }
 }
 
-fn impulse_response(cdata: &CData) -> (Vec3, Vec3, Vec3, Vec3) {
-    let (obj_a, obj_b, n, depth) = collision;
-
-	let (v1, v2, m1, m2, i1, i2) = (obj_a.vel, obj_b.vel, obj_a.inv_mass, 
-		obj_b.inv_mass, obj_a.inv_inertia, obj_b.inv_inertia);
-
-	let (r1, r2) = (n - obj_a.shape.pos(), n - obj_b.shape.pos());
-    let e = obj_a.restitution + obj_b.restitution;
-
-	
-	let j = (-(1+e)*v1).dot(n) / 
-		(m1 + m2 + (i1*r1.cross(n).cross(r1) + i2*r2.cross(n).cross(r2))).dot(n);
-
-	(m1*j*n, m2*j*n, i1*r1.cross(j*n), i2*r2.cross(j*n))
-}
 
