@@ -1,11 +1,11 @@
 use crate::vec3::Vec3;
-use crate::shape3::Shape;
-use crate::shape3;
+use crate::collider::Collider;
+use crate::collider;
 
-pub fn gjk(simplex: &mut Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> bool {
+pub fn gjk(simplex: &mut Vec<Vec3>, collider_a: &Collider, collider_b: &Collider) -> bool {
 
     //1. Pick a starting point and direction for the simplex.
-    simplex.push(pick_starting_point(shape_a, shape_b));
+    simplex.push(pick_starting_point(collider_a, collider_b));
     let mut direction = -simplex[0].normalize();
 
     let mut origin_in_simplex = false;
@@ -15,7 +15,7 @@ pub fn gjk(simplex: &mut Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> bool {
     while !origin_in_simplex {
 
         //2. Create a new point to be added to the simplex.
-        let new_point = shape3::support(shape_a, shape_b, direction);
+        let new_point = collider::support(collider_a, collider_b, direction);
 
         //3. Evaluate weather it is infeasable that the origin will ever be contained in the
         //   simplex.
@@ -31,9 +31,9 @@ pub fn gjk(simplex: &mut Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> bool {
     origin_in_simplex
 }
 
-fn pick_starting_point(shape_a: &Shape, shape_b: &Shape) -> Vec3 {
-    let direction = (shape_a.pos() - shape_b.pos()).normalize();
-    shape3::support(shape_a, shape_b, direction)
+fn pick_starting_point(collider_a: &Collider, collider_b: &Collider) -> Vec3 {
+    let direction = (collider_a.pos() - collider_b.pos()).normalize();
+    collider::support(collider_a, collider_b, direction)
 }
 
 

@@ -5,11 +5,32 @@ use crate::transform::Transform;
 use crate::collision::CData;
 use bevy::prelude::Resource; 
 use glam::Quat;
-
-
-
-fn solve_for_position(collisions: Vec<CData>) {
+ 
+pub enum Solver {
+    Position(PositionSolver),
+    Impulse(ImpulseSolver),
 }
 
-fn solve_for_impulse(collisions: Vec<CData>) {
+struct PositionSolver;
+struct ImpulseSolver;
+
+impl Solver {
+    fn solve(&self) {
+        match self {
+            Position(position_solver) => position_solver.solve(),
+            Impulse(impulse_solver) => impulse_solver.solve(),
+        }
+    }
 }
+
+impl PositionSolver {
+    fn solve(collisions: Vec<CData>) {
+
+    }
+}
+
+impl ImpulseSolver {
+    fn solve(collisions: Vec<CData>) {
+    }
+}
+

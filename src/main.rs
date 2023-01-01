@@ -1,6 +1,5 @@
-mod epa2;
 mod vec3;
-mod shape3;
+mod collider;
 mod cuboid;
 mod transform;
 mod gjk;
@@ -9,22 +8,13 @@ mod collision;
 mod phys;
 mod sphere;
 mod phys_obj;
-/*
-use crate::vec3::{Vec3, cross, dot};
-use crate::shape::Shape;
-use shape::SphereStruct;
-use std::env;
+mod cylinder;
+mod cone;
 
-
-use phys::PhysState;
-use phys::PhysObj;
-use std::time::Duration;
-*/
-
+use collider::Collider;
 use bevy::prelude::*;
 
 pub const TICK_RATE: f32 = 0.01;
-
 
 #[derive(Component)]
 pub struct Box {
@@ -86,7 +76,7 @@ fn move_boxes(
                 obj.force += vec3::Vec3{x: 0.0, y: 0.0, z: -2.5};
             }
             let obj = state.get_obj(b.id);
-            let v = obj.shape.pos();
+            let v = obj.collider.pos();
             let r = &obj.rotation;
             transform.translation = Vec3{x: v.x, y: v.y, z: v.z};
             transform.rotate(*r);
@@ -101,9 +91,9 @@ fn spawn_basic_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 ) { 
-    let id1 = state.add_obj(shape3::Shape::new_cuboid(vec3::Vec3{ x: 2.0, y: 1.0, z: 0.0}, 0.5, 0.5, 0.5), 10.0);
-    let id2 = state.add_obj(shape3::Shape::new_cuboid(vec3::Vec3{ x: 0.0, y: 1.0, z: 0.1}, 0.5, 0.5, 0.5), 10.0);
-    let id3 = state.add_obj(shape3::Shape::new_sphere(vec3::Vec3{ x: -0.5, y: 1.0, z: 0.1}, 0.5), 10.0);
+    let id1 = state.add_obj(Collider::new_cuboid(vec3::Vec3{ x: 2.0, y: 1.0, z: 0.0}, 0.5, 0.5, 0.5), 10.0);
+    let id2 = state.add_obj(Collider::new_cuboid(vec3::Vec3{ x: 0.0, y: 1.0, z: 0.1}, 0.5, 0.5, 0.5), 10.0);
+    let id3 = state.add_obj(Collider::new_sphere(vec3::Vec3{ x: -0.5, y: 1.0, z: 0.1}, 0.5), 10.0);
 
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube{size : 0.5})),

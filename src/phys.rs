@@ -1,5 +1,5 @@
 use crate::vec3::Vec3;
-use crate::shape3::Shape;
+use crate::collider::Collider;
 use crate::collision;
 use crate::transform::Transform;
 use crate::collision::CData;
@@ -11,7 +11,7 @@ use glam::Quat;
 #[derive(Resource)]
 pub struct PhysState {
     grav: Vec3,
-    objects: Vec<PhysObj>
+    objects: Vec<PhysObj>,
 }
 
 impl PhysState {
@@ -23,11 +23,16 @@ impl PhysState {
         }
     }
 
-    pub fn add_obj(&mut self, shape: Shape, mass: f32) -> usize {
+    pub fn add_obj(&mut self, collider: Collider, mass: f32) -> usize {
         let id = self.objects.len();
-        self.objects.push(PhysObj::new(shape, mass, id));
+        self.objects.push(PhysObj::new(collider, mass, id));
 
         id
+    }
+
+    pub fn remove_obj(&mut self, id: usize) {
+        //TODO this will fuck up id of other objects
+        self.objects.remove(id);
     }
 
     pub fn get_obj(&mut self, obj_id: usize) -> &mut PhysObj {
@@ -51,10 +56,10 @@ impl PhysState {
 
             let transform = Transform::new(-normal * depth, Quat::from_rotation_z(0.0));
 
-            self.objects[id_a].shape.transform(&transform);
+            self.objects[id_a].collider.transform(&transform);
 
             let transform = Transform::new(normal * depth, Quat::from_rotation_z(0.0)); 
-            self.objects[id_b].shape.transform(&transform);
+            self.objects[id_b].collider.transform(&transform);
 			
 			let (vel_a, vel_b, ang_vel_a, ang_vel_b) = self.impulse_response(&self.objects[id_a], &self.objects[id_b], normal, depth);
 			self.objects[id_a].vel += vel_a;
@@ -77,7 +82,7 @@ impl PhysState {
             obj_b.inv_inertia
         );
 
-        let (r1, r2) = (n - obj_a.shape.pos(), n - obj_b.shape.pos());
+        let (r1, r2) = (n - obj_a.collider.pos(), n - obj_b.collider.pos());
 
         let e = obj_a.restitution + obj_b.restitution;
 

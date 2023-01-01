@@ -3,35 +3,36 @@ use glam::Quat;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Transform {
-    pub displacement: Vec3,
-    pub rotation: Quat,
+    pub position: Vec3,
+    pub orientation: Quat,
 }
 
 
 impl Transform {
-    pub const ZERO: Transform = Transform { displacement: Vec3::NULL_VEC, rotation: Quat::from_xyzw(0.0, 0.0, 0.0, 0.0) };
+    pub const ZERO: Transform = Transform { position: Vec3::NULL_VEC, orientation: Quat::from_xyzw(0.0, 0.0, 0.0, 0.0) };
 
-    pub fn new(displacement: Vec3, rotation: Quat) -> Transform {
+    pub fn new(position: Vec3, orientation: Quat) -> Transform {
         Transform {
-            displacement: displacement,
-            rotation: rotation,
+            position: position,
+            orientation: orientation,
         }
     }
 
 	pub fn apply(v: Vec3, transform: &Transform, origin: Vec3) -> Vec3 {
-		let Transform { displacement, rotation } = *transform;
-		let rotation = rotate(v - origin, rotation) + origin;
-        translate(rotation, displacement)
+		let Transform { position, orientation } = *transform;
+
+        rotate(translate(v, position) - origin, orientation) + origin
 	}
 
 }
-pub fn translate(v: Vec3, displacement: Vec3) -> Vec3 {
-    v + displacement
+
+fn translate(v: Vec3, position: Vec3) -> Vec3 {
+    v + position
 }
 
-pub fn rotate(v: Vec3, rotation: Quat) -> Vec3 {
+fn rotate(v: Vec3, orientation: Quat) -> Vec3 {
 
-    let vec = rotation.mul_vec3(glam::Vec3{ x: v.x, y: v.y, z: v.z });
+    let vec = orientation.mul_vec3(glam::Vec3{ x: v.x, y: v.y, z: v.z });
     Vec3 {
         x: vec.x,
         y: vec.y,

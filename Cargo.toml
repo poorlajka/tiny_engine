@@ -7,10 +7,5 @@ edition = "2021"
 
 [dependencies]
 itertools = "0.10.5"
-vulkano = "0.22.0"
-vulkano-win = "0.22.0"
-vulkano-shaders = "0.22.0"
-winit = "0.24.0"
 bevy = "0.9.1"
-bevy-inspector-egui = "0.14.0"
 glam = "0.22.0"

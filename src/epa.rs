@@ -1,8 +1,8 @@
 use crate::vec3::Vec3;
-use crate::shape3::Shape;
-use crate::shape3::support;
+use crate::collider::Collider;
+use crate::collider::support;
 
-pub fn epa(simplex: &Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> (Vec3, f32) {
+pub fn epa(simplex: &Vec<Vec3>, collider_a: &Collider, collider_b: &Collider) -> (Vec3, f32) {
 
     //The initial polytope is the result of GJK returning true and thus contains the origin.
     //TODO polytope should probably be a struct containing normals faces and vertecies.
@@ -35,7 +35,7 @@ pub fn epa(simplex: &Vec<Vec3>, shape_a: &Shape, shape_b: &Shape) -> (Vec3, f32)
 
         //2. Get the furthest point on the minkowski difference in the direction of our closest
         //   face.
-        let minkowski_point = support(shape_a, shape_b, closest_face_normal);
+        let minkowski_point = support(collider_a, collider_b, closest_face_normal);
 
         //3. If the closest face is part of the hull of the minkowski difference
         //   we have found the point of intersection.

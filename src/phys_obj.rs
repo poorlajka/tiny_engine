@@ -1,5 +1,5 @@
 use crate::vec3::Vec3;
-use crate::shape3::Shape;
+use crate::collider::Collider;
 use crate::collision;
 use crate::transform::Transform;
 use crate::collision::CData;
@@ -8,8 +8,8 @@ use glam::Quat;
 
 
 pub struct PhysObj {
-    pub shape: Shape,
 	pub transform: Transform,
+    pub collider: Collider,
 
     pub inv_mass: f32,
     pub force: Vec3,
@@ -24,12 +24,11 @@ pub struct PhysObj {
     pub stationary: bool,
 	pub ghost: bool,
     pub id: usize,
-
 }
 
 
 impl PhysObj {
-    pub fn new(shape: Shape, mass: f32, id: usize) -> PhysObj {
+    pub fn new(collider: Collider, mass: f32, id: usize) -> PhysObj {
         PhysObj {
             transform: Transform::ZERO,
 
@@ -37,11 +36,11 @@ impl PhysObj {
             force: Vec3::new(),
             vel: Vec3::new(), 
 
-            inv_inertia: shape.inv_inertia(mass),
+            inv_inertia: collider.inv_inertia(mass),
             torque: Vec3::new(),
             ang_vel: Vec3::new(),
 
-            shape: shape,
+            collider: collider,
             restitution: 0.0,
             stationary: false,
             ghost: false,
@@ -63,14 +62,13 @@ impl PhysObj {
         self.torque = Vec3::NULL_VEC;
     }
  
-    pub fn shape(&self) -> &Shape {
-        &self.shape
+    pub fn collider(&self) -> &Collider {
+        &self.collider
     }
 
     pub fn set_ghost(&mut self, ghost: bool) {
         self.ghost = ghost;
     }
-
 
     pub fn update(&mut self, grav: Vec3, dt: f32) {
         let mut acc = self.force * self.inv_mass;
@@ -100,7 +98,7 @@ impl PhysObj {
 
         let transform = Transform::new(distance, self.rotation); 
 
-        self.shape.transform(&transform);
+        self.collider.transform(&transform);
         self.clear_forces();
     }
 }

@@ -1,7 +1,7 @@
 use crate::vec3::Vec3;
-use crate::shape3::Shape;
+use crate::collider::Collider;
 use crate::gjk::gjk;
-use crate::epa2::epa;
+use crate::epa::epa;
 use crate::phys_obj::PhysObj;
 use itertools::Itertools;
 use std::iter;
@@ -27,13 +27,13 @@ pub fn narrow_phase(collisions:&mut Vec<CData>, objects: &Vec<PhysObj>) {
 
     for (obj_a, obj_b) in possible_collisions {
 
-        let (shape_a, shape_b) = (obj_a.shape(), obj_b.shape());
+        let (collider_a, collider_b) = (obj_a.collider(), obj_b.collider());
 
         let mut simplex: Vec<Vec3> = Vec::new();
 
-        if gjk(&mut simplex, shape_a, shape_b){ 
+        if gjk(&mut simplex, collider_a, collider_b){ 
 
-            let (normal, depth) = epa(&simplex, shape_a, shape_b);
+            let (normal, depth) = epa(&simplex, collider_a, collider_b);
 
             collisions.push( 
                 CData {

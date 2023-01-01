@@ -1,13 +1,13 @@
-use crate::shape3::Shape;
+use crate::collider::Collider;
 use crate::vec3::Vec3;
 use crate::transform::Transform;
 
-pub struct SphereStruct {
+pub struct Sphere {
 	pub pos: Vec3,
 	pub radius: f32
 }
 
-impl SphereStruct {
+impl Sphere {
 
     pub fn pos(&self) -> Vec3 {
         self.pos

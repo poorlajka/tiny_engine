@@ -1,16 +1,17 @@
-use crate::shape3::Shape;
+use crate::collider::Collider;
 use crate::vec3::Vec3;
 use crate::transform::Transform;
 
-pub struct CuboidStruct {
+pub struct Cuboid {
     pub pos: Vec3,
 	pub height: f32,
 	pub width: f32,
 	pub depth: f32,
 	pub vertices: Vec<Vec3>,
+    pub trans_vertices: Vec<Vec3>,
 }
 
-impl CuboidStruct {
+impl Cuboid {
 
     pub fn transform(&mut self, transform: &Transform) {
         for vertex in &mut self.vertices {
