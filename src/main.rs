@@ -10,6 +10,7 @@ mod sphere;
 mod phys_obj;
 mod cylinder;
 mod cone;
+mod solver;
 
 use collider::Collider;
 use bevy::prelude::*;
@@ -50,7 +51,7 @@ fn move_boxes(
     for (mut b, mut transform) in &mut boxes {
         b.timer.tick(time.delta());
         if b.timer.just_finished() {
-            if keyboard.pressed(KeyCode::W) {
+            if keyboard.pressed(KeyCode::Space) {
                 let mut obj = state.get_obj(0);
                 obj.force += vec3::Vec3{x: 0.0, y: 2.5, z: 0.0};
                 
@@ -59,7 +60,7 @@ fn move_boxes(
                 let mut obj = state.get_obj(0);
                 obj.force += vec3::Vec3{x: -2.5, y: 0.0, z: 0.0};
             }
-            if keyboard.pressed(KeyCode::S) {
+            if keyboard.pressed(KeyCode::LShift) {
                 let mut obj = state.get_obj(0);
                 obj.force += vec3::Vec3{x: 0.0, y: -2.5, z: 0.0};
             }
@@ -67,11 +68,11 @@ fn move_boxes(
                 let mut obj = state.get_obj(0);
                 obj.force += vec3::Vec3{x: 2.5, y: 0.0, z: 0.0};
             }
-            if keyboard.pressed(KeyCode::J) {
+            if keyboard.pressed(KeyCode::S) {
                 let mut obj = state.get_obj(0);
                 obj.force += vec3::Vec3{x: 0.0, y: 0.0, z: 2.5};
             }
-            if keyboard.pressed(KeyCode::K) {
+            if keyboard.pressed(KeyCode::W) {
                 let mut obj = state.get_obj(0);
                 obj.force += vec3::Vec3{x: 0.0, y: 0.0, z: -2.5};
             }
