@@ -10,7 +10,7 @@ pub struct Vec3 {
 
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "x: {} \ny: {} \nz: {}", self.x, self.y, self.z)
+        write!(f, "[{}, {}, {}]", self.x, self.y, self.z)
     }
 }
 
@@ -165,7 +165,7 @@ impl Vec3 {
     }
 
     pub fn same_direction(self, rv: Vec3) -> bool {
-        self.dot(rv) > 0.0
+        self.normalize().dot(rv) > 0.0
     }
 
 	pub fn tripple_cross(a: Vec3, b: Vec3, c: Vec3) -> Vec3 {

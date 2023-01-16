@@ -14,7 +14,7 @@ impl Cone {
     }
 
     pub fn transform(&mut self, transform: &Transform) {
-        self.pos = Transform::apply(self.pos, transform, self.pos);
+        self.pos = transform.position;
     }
 
 	pub fn inv_inertia(&self, inv_m: f32) -> [[f32; 3]; 3] {

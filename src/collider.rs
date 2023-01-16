@@ -16,14 +16,15 @@ impl Collider {
 	pub fn new_cuboid(pos: Vec3, height: f32, width: f32, depth: f32) -> Collider {
         let mut vertices: Vec<Vec3> = Vec::new();
 
-        vertices.push(pos + Vec3{x: height/2.0, y: width/2.0, z: depth/2.0 }); 
-        vertices.push(pos + Vec3{x: -height/2.0, y: width/2.0, z: depth/2.0 }); 
-        vertices.push(pos + Vec3{x: height/2.0, y: -width/2.0, z: depth/2.0 }); 
-        vertices.push(pos + Vec3{x: height/2.0, y: width/2.0, z: -depth/2.0 }); 
-        vertices.push(pos + Vec3{x: -height/2.0, y: -width/2.0, z: depth/2.0 }); 
-        vertices.push(pos + Vec3{x: height/2.0, y: -width/2.0, z: -depth/2.0 }); 
-        vertices.push(pos + Vec3{x: -height/2.0, y: -width/2.0, z: depth/2.0 }); 
-        vertices.push(pos + Vec3{x: -height/2.0, y: -width/2.0, z: -depth/2.0 }); 
+        vertices.push(Vec3{x: width/2.0, y: height/2.0, z: depth/2.0 }); // top right front corner 
+        vertices.push(Vec3{x: width/2.0, y: height/2.0, z: -depth/2.0 }); // top right back corner 
+        vertices.push(Vec3{x: width/2.0, y: -height/2.0, z: depth/2.0 }); // bottom right front corner 
+        vertices.push(Vec3{x: width/2.0, y: -height/2.0, z: -depth/2.0 }); // bottom right back corner 
+        vertices.push(Vec3{x: -width/2.0, y: height/2.0, z: depth/2.0 }); // top left front corner 
+        vertices.push(Vec3{x: -width/2.0, y: height/2.0, z: -depth/2.0 }); // top left back corner 
+        vertices.push(Vec3{x: -width/2.0, y: -height/2.0, z: depth/2.0 }); // bottom left front corner 
+        vertices.push(Vec3{x: -width/2.0, y: -height/2.0, z: -depth/2.0 }); // bottom left back corner 
+
 
         let mut trans_vertices = vertices.clone();
 

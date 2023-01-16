@@ -102,6 +102,7 @@ fn check_triangle(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3) {
             }
         }
     }
+    (false, direction)
 }
 
 fn check_tetrahedron(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3) {

@@ -9,7 +9,7 @@ pub struct Transform {
 
 
 impl Transform {
-    pub const ZERO: Transform = Transform { position: Vec3::NULL_VEC, orientation: Quat::from_xyzw(0.0, 0.0, 0.0, 0.0) };
+    pub const ZERO: Transform = Transform { position: Vec3::NULL_VEC, orientation: Quat::IDENTITY };
 
     pub fn new(position: Vec3, orientation: Quat) -> Transform {
         Transform {
@@ -18,10 +18,15 @@ impl Transform {
         }
     }
 
-	pub fn apply(v: Vec3, transform: &Transform, origin: Vec3) -> Vec3 {
-		let Transform { position, orientation } = *transform;
+    pub fn from_position(position: Vec3) -> Transform {
+        Transform {
+            position: position,
+            orientation: Quat::IDENTITY,
+        }
+    }
 
-        rotate(translate(v, position) - origin, orientation) + origin
+	pub fn apply(&self, v: Vec3) -> Vec3 {
+        translate(rotate(v, self.orientation), self.position)
 	}
 
 }

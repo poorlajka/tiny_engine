@@ -4,10 +4,11 @@ use crate::collision;
 use crate::transform::Transform;
 use crate::collision::CData;
 use bevy::prelude::Resource; 
+use crate::ode_solver;
 use glam::Quat;
 
 
-pub struct PhysObj {
+pub struct Body {
 	pub transform: Transform,
     pub collider: Collider,
 
@@ -18,7 +19,6 @@ pub struct PhysObj {
     pub inv_inertia: [[f32; 3]; 3],
     pub torque: Vec3,
     pub ang_vel: Vec3,
-    pub rotation: Quat,
 
     pub restitution: f32,
     pub stationary: bool,
@@ -27,10 +27,10 @@ pub struct PhysObj {
 }
 
 
-impl PhysObj {
-    pub fn new(collider: Collider, mass: f32, id: usize) -> PhysObj {
-        PhysObj {
-            transform: Transform::ZERO,
+impl Body {
+    pub fn new(collider: Collider, mass: f32, id: usize) -> Body {
+        Body {
+            transform: Transform::from_position(collider.pos()),
 
             inv_mass: 1.0/mass,
             force: Vec3::new(),
@@ -45,8 +45,8 @@ impl PhysObj {
             stationary: false,
             ghost: false,
             id: id,
-            rotation: Quat::from_xyzw(0.0, 0.0, 0.0, 0.0),
         }
+        
     }
 
     pub fn apply_lin_force(&mut self, force: Vec3) {
@@ -68,37 +68,5 @@ impl PhysObj {
 
     pub fn set_ghost(&mut self, ghost: bool) {
         self.ghost = ghost;
-    }
-
-    pub fn update(&mut self, grav: Vec3, dt: f32) {
-        let mut acc = self.force * self.inv_mass;
-        /*
-        if !self.ghost {
-            acc += grav;
-        }
-        */
-        self.vel += acc * dt;
-        let distance = self.vel * dt;
-
-        if self.vel != Vec3::NULL_VEC {
-            self.vel -= self.vel * 0.01;
-        }
-
-        let ang_acc = self.torque * self.inv_inertia;
-        self.ang_vel += ang_acc * dt;
-
-        let rotation = self.ang_vel * dt;
-
-        //TODO fix this shit lol
-        self.rotation = Quat::from_rotation_z(rotation.z).mul_quat(Quat::from_rotation_y(rotation.y).mul_quat(Quat::from_rotation_x(rotation.x))).normalize();
-
-        if self.ang_vel != Vec3::NULL_VEC {
-            self.ang_vel -= self.ang_vel * 0.01;
-        }
-
-        let transform = Transform::new(distance, self.rotation); 
-
-        self.collider.transform(&transform);
-        self.clear_forces();
     }
 }

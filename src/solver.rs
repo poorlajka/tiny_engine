@@ -3,52 +3,58 @@ use crate::collider::Collider;
 use crate::collision;
 use crate::transform::Transform;
 use crate::collision::CData;
-use crate::phys::PhysState;
+use crate::phys_state::PhysState;
 use bevy::prelude::Resource; 
 use glam::Quat;
-use crate::phys_obj::PhysObj;
+use crate::body::Body;
 
+#[derive(PartialEq)]
 pub enum Solver {
     Position,
     Impulse,
 }
 
 impl Solver {
-    pub fn solve(&self, objects: &mut Vec<PhysObj>, collisions: &Vec<CData>) {
+    pub fn solve(&self, bodies: &mut Vec<Body>, collisions: &Vec<CData>) {
         match self {
-            Solver::Position => solve_for_position(objects, collisions),
-            Solver::Impulse => solve_for_impulse(objects, collisions),
+            Solver::Position => solve_for_position(bodies, collisions),
+            Solver::Impulse => solve_for_impulse(bodies, collisions),
         }
     }
 }
 
-fn solve_for_position(objects: &mut Vec<PhysObj>, collisions: &Vec<CData>) {
+fn solve_for_position(bodies: &mut Vec<Body>, collisions: &Vec<CData>) {
     for collision in collisions {
         let CData { id_a, id_b, normal, depth, } = *collision;
 
+        /*
         let transform = Transform::new(-normal * depth, Quat::from_rotation_z(0.0));
 
-        objects[id_a].collider.transform(&transform);
+        bodies[id_a].collider.transform(&transform);
 
         let transform = Transform::new(normal * depth, Quat::from_rotation_z(0.0)); 
-        objects[id_b].collider.transform(&transform);
+        bodies[id_b].collider.transform(&transform);
+        */
+
+        bodies[id_a].transform.position -= normal * depth;
+        bodies[id_b].transform.position += normal * depth;
     }
 }
 
-fn solve_for_impulse(objects: &mut Vec<PhysObj>, collisions: &Vec<CData>) {
+fn solve_for_impulse(bodies: &mut Vec<Body>, collisions: &Vec<CData>) {
     for collision in collisions {
         let CData { id_a, id_b, normal, depth, } = *collision;
-        let (vel_a, vel_b, ang_vel_a, ang_vel_b) = impulse_response(&objects[id_a], &objects[id_b], normal, depth);
+        let (vel_a, vel_b, ang_vel_a, ang_vel_b) = impulse_response(&bodies[id_a], &bodies[id_b], normal, depth);
 
-        objects[id_a].vel += vel_a;
-        objects[id_b].vel -= vel_b;
+        bodies[id_a].vel += vel_a;
+        bodies[id_b].vel -= vel_b;
         
-        objects[id_a].ang_vel += ang_vel_a/600.0;
-        objects[id_b].ang_vel -= ang_vel_b/600.0;
+        bodies[id_a].ang_vel += ang_vel_a/600.0;
+        bodies[id_b].ang_vel -= ang_vel_b/600.0;
     }
 }
 
-fn impulse_response(obj_a: &PhysObj, obj_b: &PhysObj, n: Vec3, depth: f32) -> (Vec3, Vec3, Vec3, Vec3) {
+fn impulse_response(obj_a: &Body, obj_b: &Body, n: Vec3, depth: f32) -> (Vec3, Vec3, Vec3, Vec3) {
 
     let (v1, v2, m1, m2, i1, i2) = (
         obj_a.vel, 

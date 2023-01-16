@@ -14,10 +14,11 @@ pub struct Cuboid {
 impl Cuboid {
 
     pub fn transform(&mut self, transform: &Transform) {
-        for vertex in &mut self.vertices {
-            *vertex = Transform::apply(*vertex, transform, self.pos);
+        for (vertex, mut t_vertex) in self.vertices.iter().zip(&mut self.trans_vertices) {
+            *t_vertex = transform.apply(*vertex);
         }
-        self.pos = Transform::apply(self.pos, transform, self.pos);
+
+        self.pos = transform.position;
     }
 
 	pub fn inv_inertia(&self, inv_m: f32) -> [[f32; 3]; 3] {
@@ -38,10 +39,10 @@ impl Cuboid {
         let mut max_dot = f32::MIN;
         let mut furthest_point = Vec3::NULL_VEC;
 
-        for vertex in &self.vertices {
-            let curr_dot = direction.dot(*vertex - self.pos);
-            if curr_dot > max_dot {
-                max_dot = curr_dot;
+        for vertex in &self.trans_vertices {
+            let dot = direction.dot(*vertex - self.pos);
+            if dot > max_dot {
+                max_dot = dot;
                 furthest_point = *vertex;
             }
         }
