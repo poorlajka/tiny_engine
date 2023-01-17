@@ -13,6 +13,7 @@ mod cone;
 mod solver;
 mod force_generator;
 mod ode_solver;
+mod oct_tree;
 
 use collider::Collider;
 use bevy::prelude::*;
