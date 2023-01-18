@@ -9,6 +9,7 @@ use crate::force_generator::ForceGenerator;
 use bevy::prelude::Resource; 
 use glam::Quat;
 use crate::ode_solver;
+use crate::oct_tree::{OctTree, OctNode, Region, Empty};
 
 #[derive(Resource)]
 pub struct PhysState {
@@ -58,6 +59,8 @@ impl PhysState {
 
     pub fn step(&mut self, dt: f32, steps: i32) {
 
+        let mut oct_tree = OctTree::new(Vec3{x:0.0,y:0.0,z:0.0}, 5.5, 10.0);
+        OctTree::insert(&mut oct_tree, &self.bodies[0]);
         //1. Detect and resolve any collisions.
         let mut collisions: Vec<CData> = Vec::new();
         collision::get_collisions(&mut collisions, &self.bodies);
