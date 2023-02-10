@@ -4,6 +4,7 @@ use crate::cuboid::Cuboid;
 use crate::sphere::Sphere;
 use crate::cylinder::Cylinder;
 use crate::cone::Cone;
+use crate::bounding_box::BoundingBox;
 
 pub enum Collider {
     Cuboid(Cuboid),
@@ -85,6 +86,15 @@ impl Collider {
             Collider::Sphere(sphere) => sphere.furthest_point(direction),
             Collider::Cylinder(cylinder) => cylinder.furthest_point(direction),
             Collider::Cone(cone) => cone.furthest_point(direction),
+        }
+    }
+
+    pub fn bounding_box(&self) -> BoundingBox {
+        match self {
+            Collider::Cuboid(cuboid) => cuboid.bounding_box(),
+            Collider::Sphere(sphere) => sphere.bounding_box(),
+            Collider::Cylinder(cylinder) => cylinder.bounding_box(),
+            Collider::Cone(cone) => cone.bounding_box(),
         }
     }
 }

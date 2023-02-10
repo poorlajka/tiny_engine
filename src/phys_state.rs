@@ -1,15 +1,13 @@
 use crate::vec3::Vec3;
 use crate::collider::Collider;
 use crate::collision;
-use crate::transform::Transform;
 use crate::collision::CData;
 use crate::body::Body;
 use crate::solver::Solver;
 use crate::force_generator::ForceGenerator;
 use bevy::prelude::Resource; 
-use glam::Quat;
 use crate::ode_solver;
-use crate::oct_tree::{OctTree, OctNode, Region, Empty};
+//use crate::oct_tree::{OctTree, OctNode, Region, Empty};
 
 #[derive(Resource)]
 pub struct PhysState {
@@ -59,8 +57,10 @@ impl PhysState {
 
     pub fn step(&mut self, dt: f32, steps: i32) {
 
+        /*
         let mut oct_tree = OctTree::new(Vec3{x:0.0,y:0.0,z:0.0}, 5.5, 10.0);
         OctTree::insert(&mut oct_tree, &self.bodies[0]);
+        */
         //1. Detect and resolve any collisions.
         let mut collisions: Vec<CData> = Vec::new();
         collision::get_collisions(&mut collisions, &self.bodies);
@@ -84,13 +84,16 @@ impl PhysState {
     }
 
     fn solve_state(&mut self, dt: f32){
+        let drag = 0.01;
         for body in &mut self.bodies {
+            /*
             if body.vel != Vec3::NULL_VEC {
-                body.vel -= body.vel * 0.01;
+                body.vel -= body.vel * drag;
             }
 
+            */
             if body.ang_vel != Vec3::NULL_VEC {
-                body.ang_vel -= body.ang_vel * 0.01;
+                body.ang_vel -= body.ang_vel * drag;
             }
 
             let (vel, ang_vel, translation, rotation) = ode_solver::solve(&body, dt);

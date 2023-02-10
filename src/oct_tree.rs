@@ -1,58 +1,57 @@
 use crate::vec3::Vec3;
 use crate::body::Body;
+use crate::bounding_box::BoundingBox;
 use core::slice::Iter;
 
-pub enum OctNode<'a> {
-    Region(Region<'a>),
-    Leaf(Leaf<'a>),
+pub enum OctNode{
+    Region(Region),
+    Leaf(Leaf),
     Empty(Empty),
 }
 
-pub struct Region<'a> {
-    pub center: Vec3,
-    pub size: f32,
-    pub children: [Box<OctNode<'a>>; 8],
-    pub bodies: Vec<&'a Body>,
+pub struct Region {
+    pub bounding_box: BoundingBox,
+    pub children: [Box<OctNode>; 8],
+    pub primitives: Vec<BoundingBox>,
 }
 
-pub struct Leaf<'a> {
-    pub bodies: Vec<&'a Body>,
+pub struct Leaf {
+    pub bounding_box: BoundingBox,
+    pub primitives: Vec<BoundingBox>,
 }
 
 pub struct Empty {
-    pub center: Vec3,
-    pub size: f32,
+    pub bounding_box: BoundingBox,
 }
 
-pub struct OctTree<'a> {
-    root: OctNode<'a>,
+pub struct OctTree {
+    root: OctNode,
     min_size: f32,
 }
 
-impl OctTree<'_> {
+impl OctTree {
     pub fn new(center: Vec3, size: f32, min_size: f32) -> Self {
         OctTree {
-            root: OctNode::new_region(center, size),
+            root: OctNode::new_leaf(center, size),
             min_size: min_size,
         }
     }
 
-    pub fn insert<'a, 'b>(oct_tree: &'a mut OctTree<'b>, body: &'b Body) {
-        OctNode::insert(&mut oct_tree.root, body, oct_tree.min_size);
+    pub fn insert(oct_tree: &mut OctTree, primitive: BoundingBox) {
+        OctNode::insert(&mut oct_tree.root, primitive, oct_tree.min_size);
     }
 
-    pub fn get_potential_collisions<'a, 'b>(oct_tree: &'a mut OctTree<'b>, potential_collisions: &mut Vec<usize>, body: &Body) {
-        OctNode::get_potential_collisions(&mut oct_tree.root, potential_collisions, body);
+    pub fn get_potential_collisions(oct_tree: &mut OctTree, potential_collisions: &mut Vec<usize>, primitive: BoundingBox) {
+        OctNode::get_potential_collisions(&mut oct_tree.root, potential_collisions, primitive);
     }
 }
 
-impl OctNode<'_> {
+impl OctNode {
     fn new_region(center: Vec3, size: f32) -> Self {
         let mut region = Region {
-            center: center,
-            size: size,
+            bounding_box: BoundingBox::new(center, size),
             children: [
-                //This is fucking stupid but I don't want Body to have the copy trait tbh so eh idk
+                //This makes me very sad when I look at it
                 Box::new(Self::new_empty(Vec3::NULL_VEC, 0.0)),
                 Box::new(Self::new_empty(Vec3::NULL_VEC, 0.0)),
                 Box::new(Self::new_empty(Vec3::NULL_VEC, 0.0)),
@@ -62,7 +61,7 @@ impl OctNode<'_> {
                 Box::new(Self::new_empty(Vec3::NULL_VEC, 0.0)),
                 Box::new(Self::new_empty(Vec3::NULL_VEC, 0.0)),
             ],
-            bodies: Vec::new(),
+            primitives: Vec::new(),
         };
 
         for octant in Octant::iter() {
@@ -72,13 +71,22 @@ impl OctNode<'_> {
         }
 
         OctNode::Region(region)
-
     }
 
-    fn new_leaf() -> Self {
+    fn new_leaf (center: Vec3, size: f32) -> OctNode {
         OctNode::Leaf(
             Leaf {
-                bodies: Vec::new(),
+                bounding_box: BoundingBox::new(center, size),
+                primitives: vec![],
+            }
+        )
+    }
+
+    fn new_populated_leaf (center: Vec3, size: f32, primitive: BoundingBox) -> OctNode {
+        OctNode::Leaf(
+            Leaf {
+                bounding_box: BoundingBox::new(center, size),
+                primitives: vec![primitive],
             }
         )
     }
@@ -86,63 +94,72 @@ impl OctNode<'_> {
     fn new_empty(center: Vec3, size: f32) -> Self {
         OctNode::Empty(
             Empty {
-                center: center,
-                size: size,
+                bounding_box: BoundingBox::new(center, size),
             }
         )
     }
 
-    fn insert<'a, 'b>(oct_node: &'a mut OctNode<'b>, body: &'b Body, min_size: f32) {
+    fn insert(oct_node: &mut OctNode, primitive: BoundingBox, min_size: f32) {
         match oct_node {
-            OctNode::Region(region) => Region::insert(region, body, min_size),
-            OctNode::Leaf(leaf) => Leaf::insert(leaf, body),
-            OctNode::Empty(empty) => {
-                if Empty::is_not_subdividable(empty, min_size) {
-                    *oct_node = OctNode::new_leaf()
+            OctNode::Empty(empty) => { 
+                let center = empty.bounding_box.position;
+                let size = empty.bounding_box.size;
+                *oct_node = OctNode::new_populated_leaf(center, size, primitive);
+            },
+
+            OctNode::Leaf(leaf) => {
+                if Leaf::is_not_subdividable(leaf, min_size) {
+                    leaf.primitives.push(primitive);
                 }
                 else {
-                    *oct_node = OctNode::new_region(empty.center, empty.size); 
+                    let center = leaf.bounding_box.position;
+                    let size = leaf.bounding_box.size;
+
+                    *oct_node = OctNode::new_region(center, size); 
+                    OctNode::insert(oct_node, primitive, min_size);
                 }
-                OctNode::insert(oct_node, body, min_size);
             },
+
+            OctNode::Region(region) => Region::insert(region, primitive, min_size),
         }
     }
 
-    pub fn get_potential_collisions<'a, 'b>(oct_node: &'a mut OctNode<'b>, potential_collisions: &mut Vec<usize>, body: &Body) {
+    pub fn get_potential_collisions(oct_node: &mut OctNode, potential_collisions: &mut Vec<usize>, primitive: BoundingBox) {
         match oct_node {
-            OctNode::Region(region) => Region::get_potential_collisions(&mut oct_tree.root, potential_collisions, body);
-            OctNode::Leaf(leaf) => Leaf::get_potential_collisions(&mut oct_tree.root, potential_collisions, body);
-            OctNode::Empty(empty) => {};
+            OctNode::Region(region) => Region::get_potential_collisions(region, potential_collisions, primitive),
+            OctNode::Leaf(leaf) => Leaf::get_potential_collisions(leaf, potential_collisions, primitive),
+            OctNode::Empty(empty) => {},
         }
     }
 }
 
-impl Region<'_> {
-    fn insert<'a, 'b>(region: &'a mut Region<'b>, body: &'b Body, min_size: f32) {
-        if region.bodies.is_empty() {
-            region.bodies.push(body);
-            return;
-        }
-        let point = body.transform.position;
+impl Region {
+    fn insert(region: &mut Region, primitive: BoundingBox, min_size: f32) {
+        let point = primitive.position;
         let octant = region.get_octant(point) as usize;
-        OctNode::insert(&mut region.children[octant], body, min_size);
+        OctNode::insert(&mut region.children[octant], primitive, min_size);
     }
 
-    fn get_potential_collisions<'a, 'b>(region: &'a mut Region<'b>, potential_collisions: &mut Vec<usize>, body: &Body) {
-        if aabb_intersect(body, region) {
-            for body in region.bodies {
-                if aabb_intersect() {
-                    potential_collisions.push(body);
+    fn get_potential_collisions(region: &mut Region, potential_collisions: &mut Vec<usize>, primitive: BoundingBox) {
+        if BoundingBox::is_intersecting(primitive, region.bounding_box) {
+            for primitive in &region.primitives {
+                if BoundingBox::is_intersecting(*primitive, region.bounding_box) {
+                    potential_collisions.push(primitive.body_id);
                 }
             }
-            for child_node in region.children {
-                OctNode::get_potential_collisions(child_node, potential_collisions);
+            for child_node in &mut region.children {
+                OctNode::get_potential_collisions(child_node, potential_collisions, primitive);
             }
         }
     }
 
     fn get_octant(&self, point: Vec3) -> Octant {
-        let (mid_x, mid_y, mid_z) = (self.center.x, self.center.y, self.center.z);
+        let (mid_x, mid_y, mid_z) = (
+            self.bounding_box.position.x, 
+            self.bounding_box.position.y, 
+            self.bounding_box.position.z
+        );
+
         let Vec3 {x, y, z,} = point;
 
         if  x <= mid_x {
@@ -184,22 +201,33 @@ impl Region<'_> {
     }
 }
 
-impl Leaf<'_> {
-    fn insert<'a, 'b>(leaf: &'a mut Leaf<'b>, body: &'b Body) {
-        leaf.bodies.push(body);
+impl Leaf {
+    fn insert(leaf: &mut Leaf, primitive: BoundingBox) {
+        leaf.primitives.push(primitive);
     }
-    fn get_potential_collisions<'a, 'b>(region: &'a mut Leaf<'b>, potential_collisions: &mut Vec<usize>, body: &Body) {
-        for primitive in leaf.bodies {
-            if aabb_intersect(body, primitive) {
-                potential_collisions.push(body);
+
+    fn get_potential_collisions(leaf: &mut Leaf, potential_collisions: &mut Vec<usize>, primitive: BoundingBox) {
+        //FUCKING REWRITE THIS FUNCTION PLEASE DEAR GOD
+        let mut self_index = 0;
+        let mut found = false;
+        for (i, leaf_primitive) in leaf.primitives.iter().enumerate() {
+            if primitive.body_id == leaf_primitive.body_id {
+                self_index = i;
+                found = true;
+                continue;
+            }
+            if BoundingBox::is_intersecting(primitive, *leaf_primitive) {
+                potential_collisions.push(primitive.body_id);
             }
         }
-    }
-}
 
-impl Empty {
-    fn is_not_subdividable(empty: &Empty, min_size: f32) -> bool {
-        empty.size < min_size / 8.0
+        if found {
+            leaf.primitives.remove(self_index);
+        }
+    }
+
+    fn is_not_subdividable(leaf: &Leaf, min_size: f32) -> bool {
+        leaf.bounding_box.size < min_size / 8.0
     }
 }
 

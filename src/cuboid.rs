@@ -1,6 +1,6 @@
-use crate::collider::Collider;
 use crate::vec3::Vec3;
 use crate::transform::Transform;
+use crate::bounding_box::BoundingBox;
 
 pub struct Cuboid {
     pub pos: Vec3,
@@ -47,5 +47,9 @@ impl Cuboid {
             }
         }
         furthest_point
+    }
+
+    pub fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(self.pos, self.height)
     }
 }

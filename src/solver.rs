@@ -27,15 +27,6 @@ fn solve_for_position(bodies: &mut Vec<Body>, collisions: &Vec<CData>) {
     for collision in collisions {
         let CData { id_a, id_b, normal, depth, } = *collision;
 
-        /*
-        let transform = Transform::new(-normal * depth, Quat::from_rotation_z(0.0));
-
-        bodies[id_a].collider.transform(&transform);
-
-        let transform = Transform::new(normal * depth, Quat::from_rotation_z(0.0)); 
-        bodies[id_b].collider.transform(&transform);
-        */
-
         bodies[id_a].transform.position -= normal * depth;
         bodies[id_b].transform.position += normal * depth;
     }

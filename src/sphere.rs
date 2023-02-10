@@ -1,6 +1,6 @@
-use crate::collider::Collider;
 use crate::vec3::Vec3;
 use crate::transform::Transform;
+use crate::bounding_box::BoundingBox;
 
 pub struct Sphere {
 	pub pos: Vec3,
@@ -37,6 +37,10 @@ impl Sphere {
 
     pub fn furthest_point(&self, direction: Vec3) -> Vec3 {
         self.pos + direction * self.radius
+    }
+
+    pub fn bounding_box(&self) -> BoundingBox {
+        BoundingBox::new(self.pos, 5.0)
     }
 
 }

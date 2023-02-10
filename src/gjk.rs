@@ -12,14 +12,18 @@ pub fn gjk(simplex: &mut Vec<Vec3>, collider_a: &Collider, collider_b: &Collider
 
     // If the simplex contains the origin that means that the minkowski difference of the two shapes
     // must also contain the origin and thus they are intersecting.
+    let mut iterations = 0;
     while !origin_in_simplex {
+        if iterations >= 30 {
+            break;
+        }
 
         //2. Create a new point to be added to the simplex.
         let new_point = collider::support(collider_a, collider_b, direction);
 
         //3. Evaluate weather it is infeasable that the origin will ever be contained in the
         //   simplex.
-        if new_point.dot(direction) < 0.0 {
+        if new_point.dot(direction) <= 0.0 {
             break;
         }
         simplex.push(new_point);
@@ -102,7 +106,6 @@ fn check_triangle(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3) {
             }
         }
     }
-    (false, direction)
 }
 
 fn check_tetrahedron(simplex: &mut Vec<Vec3>, direction: Vec3) -> (bool, Vec3) {

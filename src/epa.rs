@@ -61,7 +61,7 @@ pub fn epa(simplex: &Vec<Vec3>, collider_a: &Collider, collider_b: &Collider) ->
 fn on_minkowski_hull(face_normal: Vec3, face_distance: f32, minkowski_point: Vec3) -> bool {
     let minkowski_distance = face_normal.dot(minkowski_point);
 
-    (minkowski_distance - face_distance).abs() < 0.001
+    (minkowski_distance - face_distance).abs() < 0.003
 }
 
 //TODO Arguably kinda shit implementation should probably be rewritten from scratch.
