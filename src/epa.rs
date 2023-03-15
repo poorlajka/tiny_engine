@@ -26,7 +26,12 @@ pub fn epa(simplex: &Vec<Vec3>, collider_a: &Collider, collider_b: &Collider) ->
         //EPA generally does not work for two continous shapes with an infinite amount of support
         //points. However, forcing the algorithm to exit after a couple of iterations is a dirty hack that
         //kinda solves the problem.
-        if iterations >= 30 {
+        if iterations >= 100 {
+            break;
+        }
+
+        //Quick fix for bug where face normals goes to 0
+        if face_normals.is_empty() {
             break;
         }
 
@@ -113,8 +118,11 @@ fn expand_polytope(
         }
     }
 
-    if new_face_normals[new_closest_face].1 < old_min_distance {
-        closest_face = new_closest_face + face_normals.len();
+    //Quick patch
+    if !new_face_normals.is_empty() {
+        if new_face_normals[new_closest_face].1 < old_min_distance {
+            closest_face = new_closest_face + face_normals.len();
+        }
     }
 
     faces.append(&mut new_faces);

@@ -14,9 +14,10 @@ pub fn gjk(simplex: &mut Vec<Vec3>, collider_a: &Collider, collider_b: &Collider
     // must also contain the origin and thus they are intersecting.
     let mut iterations = 0;
     while !origin_in_simplex {
-        if iterations >= 30 {
+        if iterations >= 100 {
             break;
         }
+        iterations += 1;
 
         //2. Create a new point to be added to the simplex.
         let new_point = collider::support(collider_a, collider_b, direction);

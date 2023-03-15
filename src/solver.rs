@@ -27,21 +27,38 @@ fn solve_for_position(bodies: &mut Vec<Body>, collisions: &Vec<CData>) {
     for collision in collisions {
         let CData { id_a, id_b, normal, depth, } = *collision;
 
-        bodies[id_a].transform.position -= normal * depth;
-        bodies[id_b].transform.position += normal * depth;
+        bodies[id_a].transform.position -= normal * depth * 0.2;
+        bodies[id_b].transform.position += normal * depth * 0.2;
     }
 }
 
 fn solve_for_impulse(bodies: &mut Vec<Body>, collisions: &Vec<CData>) {
     for collision in collisions {
         let CData { id_a, id_b, normal, depth, } = *collision;
+        //println!("{}", normal);
         let (vel_a, vel_b, ang_vel_a, ang_vel_b) = impulse_response(&bodies[id_a], &bodies[id_b], normal, depth);
 
-        bodies[id_a].vel += vel_a;
-        bodies[id_b].vel -= vel_b;
+        //Temporary fix for multiple collisions causing massive speedup
+
+        if vel_a.len() < 3.0 && vel_b.len() < 3.0 {
+            bodies[id_a].vel -= vel_a;
+            bodies[id_b].vel += vel_b;
+        }
+        if ang_vel_a.len() < 0.1 {
+            bodies[id_a].ang_vel += ang_vel_a/1.0;
+        }
+        else {
+            bodies[id_a].ang_vel += ang_vel_a.normalize()/1000.0;
+
+        }
+        if ang_vel_a.len() < 0.1 {
+            bodies[id_b].ang_vel -= ang_vel_b/1.0;
+        }
+        else {
+            bodies[id_b].ang_vel -= ang_vel_b.normalize()/1000.0;
+
+        }
         
-        bodies[id_a].ang_vel += ang_vel_a/600.0;
-        bodies[id_b].ang_vel -= ang_vel_b/600.0;
     }
 }
 
@@ -56,16 +73,16 @@ fn impulse_response(obj_a: &Body, obj_b: &Body, n: Vec3, depth: f32) -> (Vec3, V
         obj_b.inv_inertia
     );
 
-    let (r1, r2) = (n - obj_a.collider.pos(), n - obj_b.collider.pos());
-
+    let (r1, r2) = (obj_a.collider.pos() - n, obj_b.collider.pos() - n);
+    let vr = v2 - v1;
     let e = obj_a.restitution + obj_b.restitution;
 
-    let j = (v1*(-1.0+e)).dot(n) / 
-        (m1 + m2 + (r1.cross(n).cross(r1)*i1 + r2.cross(n).cross(r2)*i2).dot(n));
+    let mut j = (vr*(-1.0-e)).dot(n) / 
+        (m1 + m2 + ((r1.cross(n)).cross(r1)*i1 + (r2.cross(n)).cross(r2)*i2).dot(n));
 
-    let w = 50.0;
+    let w = 3.5;
 
-    (n*m1*j*w, n*m2*j*w, r1.cross(n*j)*i1*w, r2.cross(n*j)*i2*w)
+    return (n*m1*j*w, n*m2*j*w, r1.cross(n)*i1*j*w, r2.cross(n)*i2*j*w);
 }
 
 

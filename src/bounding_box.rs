@@ -14,7 +14,7 @@ pub struct BoundingBox {
 }
 
 impl BoundingBox {
-    pub fn new(position: Vec3, size: f32) -> BoundingBox {
+    pub fn new(position: Vec3, size: f32,) -> BoundingBox {
         BoundingBox {
             position: position,
             size: size,

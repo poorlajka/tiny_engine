@@ -7,6 +7,7 @@ use crate::solver::Solver;
 use crate::force_generator::ForceGenerator;
 use bevy::prelude::Resource; 
 use crate::ode_solver;
+use crate::bounding_box::BoundingBox;
 //use crate::oct_tree::{OctTree, OctNode, Region, Empty};
 
 #[derive(Resource)]
@@ -14,19 +15,21 @@ pub struct PhysState {
     grav: Vec3,
     bodies: Vec<Body>,
     solvers: Vec<Solver>,
+    oct_tree_debug: Vec<BoundingBox>,
    // force_generators: Vec<ForceGenerator>,
 }
 
 impl PhysState {
     pub fn new() -> PhysState {
         let solvers: Vec<Solver> = vec![
-            Solver::Position, 
             Solver::Impulse,
+            Solver::Position, 
         ];
         PhysState {
             grav: Vec3 { x: 0.0, y: -0.0, z: 0.0 },
             bodies: Vec::new(),
             solvers: solvers,
+            oct_tree_debug: Vec::new(),
         }
     }
 
@@ -63,7 +66,8 @@ impl PhysState {
         */
         //1. Detect and resolve any collisions.
         let mut collisions: Vec<CData> = Vec::new();
-        collision::get_collisions(&mut collisions, &self.bodies);
+        self.oct_tree_debug = vec![];
+        collision::get_collisions(&mut collisions, &self.bodies, &mut self.oct_tree_debug);
 		self.resolve_collisions(&collisions);
 
         //2. Update current forces for state bodies.
@@ -92,9 +96,11 @@ impl PhysState {
             }
 
             */
+            /*
             if body.ang_vel != Vec3::NULL_VEC {
                 body.ang_vel -= body.ang_vel * drag;
             }
+            */
 
             let (vel, ang_vel, translation, rotation) = ode_solver::solve(&body, dt);
             body.vel = vel;

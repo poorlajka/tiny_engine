@@ -19,7 +19,7 @@ mod bounding_box;
 use collider::Collider;
 use bevy::prelude::*;
 
-pub const TICK_RATE: f32 = 0.01;
+pub const TICK_RATE: f32 = 0.016;
 
 #[derive(Component)]
 pub struct Box {
@@ -38,7 +38,7 @@ pub fn main() {
         .insert_resource(phys_state::PhysState::new())
         .insert_resource(TickTimer {timer: Timer::from_seconds(TICK_RATE, TimerMode::Repeating)})
         .add_startup_system(spawn_basic_scene)
-        .insert_resource(ClearColor(Color::BLACK))
+        .insert_resource(ClearColor(Color::GRAY))
         .add_startup_system(spawn_camera)
         .add_system(move_boxes)
         .run();
@@ -106,7 +106,7 @@ fn spawn_basic_scene(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>
 ) { 
-    let id1 = state.add_body(Collider::new_cuboid(vec3::Vec3{ x: 1.5, y: 1.5, z: 1.5}, 0.6, 0.6, 0.6), 10.0);
+    let id1 = state.add_body(Collider::new_cuboid(vec3::Vec3{ x: 2.0, y: 1.5, z: 2.0}, 0.6, 0.6, 0.6), 5.0);
     commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Cube{size : 0.6})),
         material: materials.add(Color::GREEN.into()),
@@ -116,15 +116,28 @@ fn spawn_basic_scene(
     .insert(Box {id: id1, timer: Timer::from_seconds(TICK_RATE, TimerMode::Repeating)})
     .insert(Name::new("Box1"));
 
-    let size = 6;
+    /*
+    let id2 = state.add_body(Collider::new_cuboid(vec3::Vec3{ x: 0.1, y: 1.5, z: 1.6}, 0.6, 0.6, 0.6), 0.2);
+    commands.spawn(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Cube{size : 0.6})),
+        material: materials.add(Color::GREEN.into()),
+        transform: Transform::from_xyz(0.0, 0.5, 0.0),
+        ..default()
+    })
+    .insert(Box {id: id2, timer: Timer::from_seconds(TICK_RATE, TimerMode::Repeating)})
+    .insert(Name::new("Box1"));
+    */
+
+    let size = 11;
+    let spread = 1.5;
     for dx in 1..size {
         for dy in 1..size {
             for dz in 1..size {
 
-                let id = state.add_body(Collider::new_cuboid(vec3::Vec3{ x: -3.0 + (dx as f32)/2.0, y: -3.0 + (dy as f32)/2.0, z: -3.0 + (dz as f32)/2.0}, 0.2, 0.2, 0.2), 1.0);
+                let id = state.add_body(Collider::new_cuboid(vec3::Vec3{ x: -4.0 + (dx as f32)/spread, y: -3.0 + (dy as f32)/spread, z: -3.0 + (dz as f32)/spread}, 0.2, 0.2, 0.2), 0.2);
                 commands.spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Cube{size : 0.2})),
-                    material: materials.add(Color::RED.into()),
+                    material: materials.add(Color::BLACK.into()),
                     transform: Transform::from_xyz(0.0, 0.5, 0.0),
                     ..default()
                 })
