@@ -27,7 +27,6 @@ fn broad_phase(possible_collisions: &mut Vec<(usize, usize)>, bodies: &Vec<Body>
         primitive.body_id = body.id;
         OctTree::insert(&mut oct_tree, primitive);
     }
-    //OctTree::print(&oct_tree);
 
     OctTree::get_subdivisions(&oct_tree, oct_tree_debug);
 
@@ -50,24 +49,15 @@ fn broad_phase(possible_collisions: &mut Vec<(usize, usize)>, bodies: &Vec<Body>
 }
 
 pub fn narrow_phase(collisions:&mut Vec<CData>, possible_collisions: &Vec<(usize, usize)>, bodies: &Vec<Body>) {
-    /*
-    let possible_collisions = bodies.iter()
-        .tuple_combinations();
-        */
 
     for (id_a, id_b) in possible_collisions {
-        //println!("POTENTIAL COLLISION BETWEEN: {}, {}", id_a, id_b);
 
         let (obj_a, obj_b) = (&bodies[*id_a], &bodies[*id_b]);
         let (collider_a, collider_b) = (obj_a.collider(), obj_b.collider());
-        //(bodies[*id_a].collider(), bodies[*id_b].collider());
 
         let mut simplex: Vec<Vec3> = Vec::new();
-
         if gjk(&mut simplex, collider_a, collider_b){ 
-        //println!("enter epa");
             let (normal, depth) = epa(&simplex, collider_a, collider_b);
-        //println!("exit epa");
 
             collisions.push( 
                 CData {

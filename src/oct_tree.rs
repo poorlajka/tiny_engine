@@ -78,13 +78,10 @@ impl OctNode {
             primitives: Vec::new(),
         };
 
-        //println!("Start");
         for octant in Octant::iter() {
 
-            //octant.print();
             let subdivide_size = size / 2.0;
             let subdivide_center = octant.get_center(center, size);
-            //println!("{}", subdivide_center);
             region.children[octant as usize] = Box::new(OctNode::new_empty(subdivide_center, subdivide_size));
         }
 
@@ -120,7 +117,6 @@ impl OctNode {
     fn insert(oct_node: &mut OctNode, primitive: BoundingBox, min_size: f32) {
         match oct_node {
             OctNode::Empty(empty) => { 
-                //println!("empty pos: {}, size: {}", empty.bounding_box.position, empty.bounding_box.size);
                 let center = empty.bounding_box.position;
                 let size = empty.bounding_box.size;
                 *oct_node = OctNode::new_populated_leaf(center, size, primitive);
@@ -135,7 +131,6 @@ impl OctNode {
                     let size = leaf.bounding_box.size;
                     let primitives = leaf.primitives.clone();
                     *oct_node = OctNode::new_region(center, size); 
-                    //println!("center: {}, size: {}", center, size);
 
                     for leaf_primitive in primitives {
                         OctNode::insert(oct_node, leaf_primitive, min_size);
@@ -165,31 +160,21 @@ impl OctNode {
     pub fn print(oct_node: &OctNode) {
         match oct_node {
             OctNode::Region(region) => {
-                //println!("Region pos: {}, size: {}", region.bounding_box.position, region.bounding_box.size);
                 for primitive in &region.primitives {
                     println!("Body: {}", primitive.body_id);
                 }
                 for (i, child_node) in region.children.iter().enumerate() {
-                    //println!("child {} [", i+1);
                     OctNode::print(child_node);
-                    //println!("]");
                 }
             },
             OctNode::Leaf(leaf) => {
-                //println!("leaf[");
-                //println!("Leaf pos: {}, size: {}", leaf.bounding_box.position, leaf.bounding_box.size);
                 for primitive in &leaf.primitives {
-                //    println!("Body: {}", primitive.body_id);
-                    //println!("Body pos: {}, size: {}", primitive.position, primitive.size);
                     if !BoundingBox::is_intersecting(*primitive, leaf.bounding_box) {
                         println!("Hello world");
                     }
-                    //println!("Body inside leaf = {}", BoundingBox::is_intersecting(*primitive, leaf.bounding_box));
                 }
-                //println!("]");
             },
             OctNode::Empty(empty) => {
-                //println!("empty[]");
             },
         }
     }
@@ -215,12 +200,8 @@ impl OctNode {
 impl Region {
 
     fn insert(region: &mut Region, primitive: BoundingBox, min_size: f32) {
-        //println!("region pos: {}", region.bounding_box.position);
         let point = primitive.position;
-        //println!("primitive pos: {}", primitive.position);
-        //println!("prim in region: {}", BoundingBox::is_intersecting(primitive, region.bounding_box));
         let octant = region.get_octant(point);
-        //octant.print();
         OctNode::insert(&mut region.children[octant as usize], primitive, min_size);
     }
 
@@ -295,6 +276,12 @@ impl Leaf {
 
             let mut found = false;
         if BoundingBox::is_intersecting(primitive, leaf.bounding_box) {
+
+            for leaf_primitive in &leaf.primitives {
+                if leaf_primitive.body_id != primitive.body_id {
+                    potential_collisions.push(leaf_primitive.body_id);
+                }
+
             /*
             let mut self_index = 0;
             for (i, leaf_primitive) in leaf.primitives.iter().enumerate() {
@@ -309,10 +296,6 @@ impl Leaf {
             }
             */
 
-            for leaf_primitive in &leaf.primitives {
-                if leaf_primitive.body_id != primitive.body_id {
-                    potential_collisions.push(leaf_primitive.body_id);
-                }
 
                 /*
                 if BoundingBox::is_intersecting(primitive, *leaf_primitive) {

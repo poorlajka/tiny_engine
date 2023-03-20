@@ -1,3 +1,7 @@
+/*
+Quick and dirty test of the physics engine using bevy for graphics.
+*/
+
 mod vec3;
 mod collider;
 mod cuboid;
